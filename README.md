@@ -3,7 +3,7 @@
 **Turkish Macroeconomic Dashboard** is a real-time analytics tool designed to track, visualize, and analyze key indicators of the Turkish economy. Built with Streamlit and Python, it fetches data directly from the **Central Bank of the Republic of Turkey (TCMB) EVDS API**.
 
 ![Dashboard Preview](assets/dashboard_preview.png)
-*(Note: You can add a screenshot here later)*
+
 
 ## 🚀 Features
 
