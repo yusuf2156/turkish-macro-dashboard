@@ -18,15 +18,6 @@ def metric_card(title: str, value: str, delta: str = None, help_text: str = None
         {f'<div style="color: {"green" if delta and "+" in delta or (delta and float(delta.strip("%").replace("+","")) > 0) else "red"}; font-size: 14px; margin-top: 5px;">{delta}</div>' if delta else ''}
     </div>
     """, unsafe_allow_html=True)
-    
-    # Note: Streamlit built-in metric is also good, but custom HTML gives more control.
-    # However, to be consistent with Streamlit, we might just use st.metric.
-    # The user asked for "Metric Cards Component", let's stick to st.metric for simplicity and native look unless requested otherwise.
-    # But wait, the plan said "Visual style: Card with title, value, change indicator, and mini-trend".
-    # st.metric does title, value, delta.
-    # Let's wrap st.metric in a container for now.
-    
-    # Actually, let's use st.metric but maybe style the container.
     pass
 
 def render_metric_card(title: str, value: str, delta: str = None, description: str = None):

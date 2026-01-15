@@ -8,10 +8,8 @@ def render_inflation_page():
     st.header("INF 💰 Inflation Deep-Dive")
     st.markdown("Analysis of Consumer Price Index (CPI) trends using official TÜİK data via TCMB.")
 
-    # Controls
     col1, col2 = st.columns(2)
     with col1:
-        # Default to last 2 years for inflation
         start_date = st.date_input("Start Date", datetime.now() - timedelta(days=730))
     with col2:
         end_date = st.date_input("End Date", datetime.now())
@@ -27,7 +25,6 @@ def render_inflation_page():
         if not df.empty:
             st.success(f"Loaded {len(df)} months of data")
             
-            # Latest Values
             latest = df.iloc[-1]
             prev = df.iloc[-2] if len(df) > 1 else latest
             
@@ -35,10 +32,8 @@ def render_inflation_page():
             c1.metric("Annual Inflation (YoY)", f"{latest['CPI_Annual']:.2f}%", f"{latest['CPI_Annual'] - prev['CPI_Annual']:.2f}%", delta_color="inverse")
             c2.metric("Monthly Inflation (MoM)", f"{latest['CPI_Monthly']:.2f}%", f"{latest['CPI_Monthly'] - prev['CPI_Monthly']:.2f}%", delta_color="inverse")
 
-            # Main Chart
             fig = go.Figure()
             
-            # Annual Change Bar
             fig.add_trace(go.Bar(
                 x=df['Date'],
                 y=df['CPI_Annual'],
@@ -46,7 +41,6 @@ def render_inflation_page():
                 marker_color='#E30A17'
             ))
             
-            # Monthly Change Line
             fig.add_trace(go.Scatter(
                 x=df['Date'],
                 y=df['CPI_Monthly'],

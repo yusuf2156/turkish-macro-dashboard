@@ -1,4 +1,3 @@
-
 import streamlit as st
 import altair as alt
 from datetime import datetime, timedelta
@@ -11,7 +10,6 @@ def show_production():
     
     client = TCMBClient()
     
-    # 5 Years of data for context
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365*5)
     
@@ -25,10 +23,8 @@ def show_production():
         st.error("No Production data available. Please check API connection.")
         return
         
-    # --- Metrics ---
     latest = df.iloc[-1]
     
-    # Capacity Utilization
     cap_curr = latest["Capacity_Utilization"]
     cap_prev = df.iloc[-2]["Capacity_Utilization"] if len(df) > 1 else cap_curr
     cap_delta = cap_curr - cap_prev
@@ -54,6 +50,5 @@ def show_production():
         
         st.altair_chart(chart, use_container_width=True)
     
-    # Data Table
     with st.expander("View Raw Data"):
         st.dataframe(df.sort_values("Date", ascending=False))

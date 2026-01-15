@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -15,44 +14,32 @@ def show_overview():
     st.markdown("## 🇹🇷 Executive Summary")
     st.markdown("Key economic indicators at a glance.")
     
-    # Initialize Client
     tcmb = TCMBClient()
     
-    # Date Range (Last 13 months for trends)
     end_date = datetime.now()
     start_date = end_date - timedelta(days=400)
     
     end_str = end_date.strftime("%d-%m-%Y")
     start_str = start_date.strftime("%d-%m-%Y")
 
-    # Fetch Data
     with st.spinner("Fetching latest economic data..."):
         try:
-            # 1. Inflation (CPI)
             df_cpi = tcmb.get_cpi_data(start_str, end_str)
             
-            # 2. Exchange Rates (USD & EUR)
             df_test_ex = tcmb.get_exchange_rates(start_str, end_str, currencies=["USD", "EUR"])
             
-            # 3. Policy Rate
             df_int = tcmb.get_interest_rates(start_str, end_str)
 
-            # 4. Production
             df_prod = tcmb.get_production_data(start_str, end_str)
 
-            # 5. Labor Market
             df_labor = tcmb.get_labor_data(start_str, end_date.strftime("%d-%m-%Y"))
             
         except Exception as e:
             st.error(f"Error fetching data: {e}")
             return
 
-    # Layout: Vertical Sections
-    
-    # Establish strict 1-year start date for charts
     chart_start_date = end_date - timedelta(days=365)
     
-    # --- Inflation Section ---
     st.markdown("### 🏷️ Inflation")
     col_inf_metric, col_inf_chart = st.columns([1, 3])
     
@@ -78,7 +65,6 @@ def show_overview():
 
     st.divider()
 
-    # --- Exchange Rate Section ---
     st.markdown("### 💱 Exchange Rates (USD/TRY)")
     col_fx_metric, col_fx_chart = st.columns([1, 3])
     
@@ -94,19 +80,15 @@ def show_overview():
 
     with col_fx_chart:
         if not df_test_ex.empty:
-            # Prepare data: Fill missing values to ensure continuous line
             df_chart = df_test_ex.copy()
-            df_chart = df_chart.ffill()  # Forward fill gaps (weekends)
+            df_chart = df_chart.ffill()
             
-            # Filter strictly for last year
             df_chart = df_chart[df_chart['Date'] >= chart_start_date]
             
-            # Base Chart
             base = alt.Chart(df_chart).encode(
                 x=alt.X('Date', title='Date', axis=alt.Axis(format='%b %Y', grid=False))
             )
             
-            # Gradient Area
             area = base.mark_area(
                 line={'color': '#1E3A5F'},
                 color=alt.Gradient(
@@ -119,19 +101,16 @@ def show_overview():
                 y=alt.Y('USD', title='USD/TRY', scale=alt.Scale(zero=False, padding=0.1), axis=alt.Axis(grid=True))
             )
             
-            # Line on top
             line = base.mark_line(color="#1E3A5F").encode(
                 y=alt.Y('USD', scale=alt.Scale(zero=False))
             )
             
-            # Combine
             chart_usd = (area + line).encode(
                 tooltip=[alt.Tooltip('Date', format='%d-%m-%Y'), alt.Tooltip('USD', format='.4f')]
             ).properties(height=300)
             
             st.altair_chart(chart_usd, use_container_width=True)
 
-    # Euro Section (New Row)
     col_eur_metric, col_eur_chart = st.columns([1, 3])
     
     with col_eur_metric:
@@ -144,18 +123,14 @@ def show_overview():
     
     with col_eur_chart:
         if not df_test_ex.empty and 'EUR' in df_test_ex.columns:
-            # Prepare data
             df_chart_eur = df_test_ex.copy()
             df_chart_eur = df_chart_eur.ffill()
-            # Filter strictly for last year
             df_chart_eur = df_chart_eur[df_chart_eur['Date'] >= chart_start_date]
             
-            # Base Chart
             base_eur = alt.Chart(df_chart_eur).encode(
                 x=alt.X('Date', title='Date', axis=alt.Axis(format='%b %Y', grid=False))
             )
 
-            # Gradient Area (using same color scheme for consistency)
             area_eur = base_eur.mark_area(
                 line={'color': '#1E3A5F'},
                 color=alt.Gradient(
@@ -180,7 +155,6 @@ def show_overview():
 
     st.divider()
 
-    # --- Interest Rate Section ---
     st.markdown("### 🏦 Policy Rate")
     col_int_metric, col_int_chart = st.columns([1, 3])
     
@@ -210,7 +184,6 @@ def show_overview():
     
     st.divider()
 
-    # --- Production Section ---
     st.markdown("### 🏭 Production (Capacity Utilization)")
     col_prod_metric, col_prod_chart = st.columns([1, 3])
 
@@ -237,7 +210,6 @@ def show_overview():
     
     st.divider()
 
-    # --- Labor Market Section ---
     st.markdown("### 👷 Labor Market (Unemployment)")
     col_lab_metric, col_lab_chart = st.columns([1, 3])
 
@@ -263,6 +235,4 @@ def show_overview():
             
     st.divider()
 
-    # Recent Updates
     st.info("ℹ️ Charts display data for the last 1 year.")
-

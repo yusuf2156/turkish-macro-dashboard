@@ -16,7 +16,6 @@ class CustomSSLAdapter(HTTPAdapter):
     """
     def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         context = create_urllib3_context(ciphers='DEFAULT@SECLEVEL=1')
-        # context.options |= 0x4  # OP_LEGACY_SERVER_CONNECT (if needed)
         self.poolmanager = PoolManager(
             num_pools=connections, 
             maxsize=maxsize, 
@@ -31,7 +30,6 @@ class TCMBClient:
     def __init__(self, api_key: str = None):
         self.api_key = api_key or TCMB_API_KEY
         self.session = requests.Session()
-        # Mount custom adapter for https to fix SSL handshake errors
         self.session.mount('https://', CustomSSLAdapter())
     
     @st.cache_data(ttl=3600)
@@ -41,8 +39,6 @@ class TCMBClient:
         Note: Using _self to exclude self from cache hashing.
         """
         if not _self.api_key:
-            # For development/demo without key, we might want to return mock data or raise error
-            # For now, explicit error
             st.error("TCMB API Key is missing. Please set TCMB_API_KEY in .env file.")
             return pd.DataFrame()
 
@@ -61,13 +57,9 @@ class TCMBClient:
             "endDate": end_date,
             "type": "json",
             "key": _self.api_key,
-            "frequency": 1  # Daily
+            "frequency": 1
         }
         
-        # Manually construct URL because TCMB API uses /service/evds/param1=val1 format
-        # instead of standard ?param1=val1
-        # IMPORTANT: Key must be in HEADER now (since April 2024), not in URL.
-        # So we remove 'key' from params here.
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
         url = f"{_self.BASE_URL}/{query_string}"
@@ -78,7 +70,7 @@ class TCMBClient:
         }
         
         try:
-            response = _self.session.get(url, headers=headers)
+            response = _self.session.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
             
@@ -87,12 +79,9 @@ class TCMBClient:
                 
             df = pd.DataFrame(data["items"])
             
-            # Cleanup
             if "Tarih" in df.columns:
                 df["Date"] = pd.to_datetime(df["Tarih"], format="%d-%m-%Y")
             
-            # Rename columns back to currency names
-            # API replaces dots with underscores in response keys (e.g. TP.DK.USD.A -> TP_DK_USD_A)
             rename_dict = {}
             for k, v in series_map.items():
                 api_key_name = v.replace(".", "_")
@@ -101,7 +90,6 @@ class TCMBClient:
             
             df.rename(columns=rename_dict, inplace=True)
             
-            # Convert numeric columns
             for col in currencies:
                 if col in df.columns:
                     df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -127,18 +115,15 @@ class TCMBClient:
         if not _self.api_key:
             return pd.DataFrame()
 
-        # We request TP.FG.J0 (Index)
         series_map = {
             "CPI_Index": "TP.FG.J0"
         }
         
         series_str = "-".join(series_map.values())
         
-        # We need extra data for calculations (12 months prior)
         try:
             date_fmt = "%d-%m-%Y"
             s = datetime.strptime(start_date, date_fmt)
-            # Go back 18 months to be absolutely safe for YoY
             s_prev = s - timedelta(days=550) 
             start_date_extended = s_prev.strftime(date_fmt)
         except:
@@ -149,10 +134,9 @@ class TCMBClient:
             "startDate": start_date_extended,
             "endDate": end_date,
             "type": "json",
-            "frequency": 5  # Monthly
+            "frequency": 5
         }
         
-        # Manually construct URL
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         url = f"{_self.BASE_URL}/{query_string}"
         
@@ -162,7 +146,7 @@ class TCMBClient:
         }
         
         try:
-            response = _self.session.get(url, headers=headers)
+            response = _self.session.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
             
@@ -171,15 +155,11 @@ class TCMBClient:
                 
             df = pd.DataFrame(data["items"])
             
-            # Cleanup
             if "Tarih" in df.columns:
                 df["Date"] = pd.to_datetime(df["Tarih"] + "-01", format="%Y-%m-%d", errors='coerce')
-                # Fallback
                 if df["Date"].isna().any():
                      df["Date"] = pd.to_datetime(df["Tarih"], format="%d-%m-%Y", errors='coerce')
 
-            # Rename columns
-            # API replaces dots with underscores in response keys
             rename_dict = {}
             for k, v in series_map.items():
                 api_key_name = v.replace(".", "_")
@@ -188,18 +168,14 @@ class TCMBClient:
             
             df.rename(columns=rename_dict, inplace=True)
             
-            # Convert numeric
             if "CPI_Index" in df.columns:
                 df["CPI_Index"] = pd.to_numeric(df["CPI_Index"], errors='coerce')
                 
-                # Calculate Rates
-                # IMPORTANT: Reset index to ensure pct_change works on contiguous rows
                 df = df.sort_values("Date").reset_index(drop=True)
                 
                 df["CPI_Annual"] = df["CPI_Index"].pct_change(periods=12) * 100
                 df["CPI_Monthly"] = df["CPI_Index"].pct_change(periods=1) * 100
             
-            # Filter back to requested range
             req_start = pd.to_datetime(start_date, format="%d-%m-%Y")
             df = df[df["Date"] >= req_start]
 
@@ -216,7 +192,6 @@ class TCMBClient:
         Series:
         - TP.APIFON4: Weighted Average Funding Cost (Used as proxy for Policy Rate due to TP.PY.P01 restriction)
         """
-        # Cache buster: SSL Fix Applied
         if not _self.api_key:
             return pd.DataFrame()
 
@@ -233,8 +208,6 @@ class TCMBClient:
             "type": "json"
         }
         
-        # Manually construct URL
-        # TCMB API logic
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
         url = f"{_self.BASE_URL}/{query_string}"
@@ -245,7 +218,7 @@ class TCMBClient:
         }
         
         try:
-            response = _self.session.get(url, headers=headers)
+            response = _self.session.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
             
@@ -254,11 +227,9 @@ class TCMBClient:
                 
             df = pd.DataFrame(data["items"])
             
-            # Cleanup
             if "Tarih" in df.columns:
                 df["Date"] = pd.to_datetime(df["Tarih"], format="%d-%m-%Y")
             
-            # Rename columns
             rename_dict = {}
             for k, v in series_map.items():
                 api_key_name = v.replace(".", "_")
@@ -270,9 +241,6 @@ class TCMBClient:
             if "Policy_Rate" in df.columns:
                 df["Policy_Rate"] = pd.to_numeric(df["Policy_Rate"], errors='coerce')
                 
-            # Filter NaNs if any (TCMB might return days without decisions as empty or repeat? 
-            # Usually for TP.PY.P01 they return data on change dates or linearly? 
-            # Let's clean up.)
             df = df.dropna(subset=["Policy_Rate"])
             
             return df.sort_values("Date")
@@ -305,7 +273,6 @@ class TCMBClient:
             "type": "json"
         }
         
-        # Manually construct URL
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
         url = f"{_self.BASE_URL}/{query_string}"
@@ -316,7 +283,7 @@ class TCMBClient:
         }
         
         try:
-            response = _self.session.get(url, headers=headers)
+            response = _self.session.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
             
@@ -325,11 +292,9 @@ class TCMBClient:
                 
             df = pd.DataFrame(data["items"])
             
-            # Cleanup
             if "Tarih" in df.columns:
                 df["Date"] = pd.to_datetime(df["Tarih"], format="%Y-%m")
             
-            # Rename columns
             rename_dict = {}
             for k, v in series_map.items():
                 api_key_name = v.replace(".", "_")
@@ -373,7 +338,6 @@ class TCMBClient:
             "type": "json"
         }
         
-        # Manually construct URL
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
         url = f"{_self.BASE_URL}/{query_string}"
@@ -384,7 +348,7 @@ class TCMBClient:
         }
         
         try:
-            response = _self.session.get(url, headers=headers)
+            response = _self.session.get(url, headers=headers, timeout=15)
             response.raise_for_status()
             data = response.json()
             
@@ -393,11 +357,9 @@ class TCMBClient:
                 
             df = pd.DataFrame(data["items"])
             
-            # Cleanup
             if "Tarih" in df.columns:
                 df["Date"] = pd.to_datetime(df["Tarih"], format="%Y-%m")
             
-            # Rename columns
             rename_dict = {}
             for k, v in series_map.items():
                 api_key_name = v.replace(".", "_")
@@ -406,7 +368,6 @@ class TCMBClient:
                     
             df.rename(columns=rename_dict, inplace=True)
             
-            # Convert numeric columns
             for col in ["Unemployment_Rate", "Participation_Rate"]:
                 if col in df.columns:
                     df[col] = pd.to_numeric(df[col], errors='coerce')

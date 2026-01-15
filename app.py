@@ -6,11 +6,9 @@ from components.inflation import render_inflation_page
 from components.interest import render_interest_page
 from datetime import datetime, timedelta
 import pandas as pd
-import pandas as pd
 import plotly.express as px
 import os
 
-# Page configuration
 st.set_page_config(
     page_title=PAGE_TITLE,
     page_icon=PAGE_ICON,
@@ -18,17 +16,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Load custom CSS
 try:
     with open("assets/style.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 except FileNotFoundError:
     pass
 
-# Sidebar
 with st.sidebar:
     st.title(f"{PAGE_ICON} Macro Dashboard")
-    # Sidebar Navigation
     st.sidebar.title("Navigation")
     
     page = st.sidebar.radio(
@@ -40,7 +35,6 @@ with st.sidebar:
     st.markdown("### Settings")
     st.caption(f"v0.2.0 • Phase 2")
 
-# Main content
 st.title(f"{PAGE_ICON} {PAGE_TITLE}")
 
 if page == "Overview":
@@ -70,10 +64,8 @@ elif page == "Exchange Rates":
         if not df.empty:
             st.success(f"Fetched {len(df)} records")
             
-            # Fix: Forward fill missing values (weekends/holidays) to ensure continuous line
             df_chart = df.ffill()
             
-            # Simple line chart
             melted_df = df_chart.melt(id_vars=["Date"], value_vars=["USD", "EUR"], var_name="Currency", value_name="Rate")
             fig = px.line(melted_df, x="Date", y="Rate", color="Currency", title="USD & EUR / TRY Rates")
             st.plotly_chart(fig, use_container_width=True)

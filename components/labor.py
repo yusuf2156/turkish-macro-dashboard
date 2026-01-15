@@ -1,4 +1,3 @@
-
 import streamlit as st
 import altair as alt
 from datetime import datetime, timedelta
@@ -11,7 +10,6 @@ def show_labor():
     
     client = TCMBClient()
     
-    # 5 Years of data for context
     end_date = datetime.now()
     start_date = end_date - timedelta(days=365*5)
     
@@ -25,15 +23,12 @@ def show_labor():
         st.error("No Labor Market data available. Please check API connection.")
         return
         
-    # --- Metrics ---
     latest = df.iloc[-1]
     
-    # Unemployment
     unemp_curr = latest["Unemployment_Rate"]
     unemp_prev = df.iloc[-2]["Unemployment_Rate"] if len(df) > 1 else unemp_curr
     unemp_delta = unemp_curr - unemp_prev
     
-    # Participation
     part_curr = latest["Participation_Rate"]
     part_prev = df.iloc[-2]["Participation_Rate"] if len(df) > 1 else part_curr
     part_delta = part_curr - part_prev
@@ -58,11 +53,7 @@ def show_labor():
         
     st.divider()
     
-    # --- Charts ---
     st.markdown("#### Historical Trends (5 Years)")
-    
-    # Dual Chart? Or separate? Let's do separate for clarity vertically, or dual axis.
-    # Separate is cleaner.
     
     tab1, tab2 = st.tabs(["Unemployment Rate", "Participation Rate"])
     
@@ -82,6 +73,5 @@ def show_labor():
         ).properties(height=350)
         st.altair_chart(chart_part, use_container_width=True)
 
-    # Data Table
     with st.expander("View Raw Data"):
             st.dataframe(df.sort_values("Date", ascending=False))
