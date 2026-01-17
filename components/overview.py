@@ -70,11 +70,16 @@ def show_overview():
     
     with col_fx_metric:
         if not df_test_ex.empty:
-            latest_ex = df_test_ex.iloc[-1]
-            current_usd = latest_ex['USD']
-            prev_usd = df_test_ex.iloc[-2]['USD'] if len(df_test_ex) > 1 else current_usd
-            delta_usd = current_usd - prev_usd
-            render_metric_card("USD/TRY", f"{current_usd:.4f}", f"{delta_usd:+.4f}", "Daily Rate")
+            # Forward-fill and drop NaN to get valid latest values
+            df_fx_valid = df_test_ex.ffill().dropna(subset=['USD'])
+            if not df_fx_valid.empty:
+                latest_ex = df_fx_valid.iloc[-1]
+                current_usd = latest_ex['USD']
+                prev_usd = df_fx_valid.iloc[-2]['USD'] if len(df_fx_valid) > 1 else current_usd
+                delta_usd = current_usd - prev_usd
+                render_metric_card("USD/TRY", f"{current_usd:.4f}", f"{delta_usd:+.4f}", "Daily Rate")
+            else:
+                st.warning("No Data")
         else:
             st.warning("No Data")
 
@@ -115,11 +120,16 @@ def show_overview():
     
     with col_eur_metric:
         if not df_test_ex.empty and 'EUR' in df_test_ex.columns:
-            latest_ex = df_test_ex.iloc[-1]
-            current_eur = latest_ex['EUR']
-            prev_eur = df_test_ex.iloc[-2]['EUR'] if len(df_test_ex) > 1 else current_eur
-            delta_eur = current_eur - prev_eur
-            render_metric_card("EUR/TRY", f"{current_eur:.4f}", f"{delta_eur:+.4f}", "Daily Rate")
+            # Forward-fill and drop NaN to get valid latest values
+            df_eur_valid = df_test_ex.ffill().dropna(subset=['EUR'])
+            if not df_eur_valid.empty:
+                latest_ex = df_eur_valid.iloc[-1]
+                current_eur = latest_ex['EUR']
+                prev_eur = df_eur_valid.iloc[-2]['EUR'] if len(df_eur_valid) > 1 else current_eur
+                delta_eur = current_eur - prev_eur
+                render_metric_card("EUR/TRY", f"{current_eur:.4f}", f"{delta_eur:+.4f}", "Daily Rate")
+            else:
+                st.warning("No Data")
     
     with col_eur_chart:
         if not df_test_ex.empty and 'EUR' in df_test_ex.columns:
