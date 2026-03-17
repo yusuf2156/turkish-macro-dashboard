@@ -25,7 +25,7 @@ class CustomSSLAdapter(HTTPAdapter):
         )
 
 class TCMBClient:
-    BASE_URL = "https://evds2.tcmb.gov.tr/service/evds"
+    BASE_URL = "https://evds3.tcmb.gov.tr/igmevdsms-dis"
     
     def __init__(self, api_key: str = None):
         self.api_key = api_key or TCMB_API_KEY

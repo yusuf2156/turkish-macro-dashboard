@@ -94,7 +94,7 @@ elif page == "About":
     
     #### 📡 Data Sources
     All data is sourced directly from the **Central Bank of the Republic of Turkey (TCMB) Electronic Data Delivery System (EVDS)**.
-    - **API Endpoint**: `https://evds2.tcmb.gov.tr/service/evds/`
+    - **API Endpoint**: `https://evds3.tcmb.gov.tr/igmevdsms-dis/`
     - **Update Frequency**: Data is fetched in real-time upon user request.
     
     #### 🧮 Methodology & Notes
