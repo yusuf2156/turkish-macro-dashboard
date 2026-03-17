@@ -62,7 +62,8 @@ class TCMBClient:
         
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
-        url = f"{_self.BASE_URL}/{query_string}"
+        base_api_url = "https://evds3.tcmb.gov.tr/igmevdsms-dis"
+        url = f"{base_api_url}/{query_string}"
         
         headers = {
             "key": _self.api_key,
@@ -138,7 +139,8 @@ class TCMBClient:
         }
         
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
-        url = f"{_self.BASE_URL}/{query_string}"
+        base_api_url = "https://evds3.tcmb.gov.tr/igmevdsms-dis"
+        url = f"{base_api_url}/{query_string}"
         
         headers = {
             "key": _self.api_key,
@@ -210,7 +212,8 @@ class TCMBClient:
         
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
-        url = f"{_self.BASE_URL}/{query_string}"
+        base_api_url = "https://evds3.tcmb.gov.tr/igmevdsms-dis"
+        url = f"{base_api_url}/{query_string}"
         
         headers = {
             "key": _self.api_key,
@@ -275,7 +278,8 @@ class TCMBClient:
         
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
-        url = f"{_self.BASE_URL}/{query_string}"
+        base_api_url = "https://evds3.tcmb.gov.tr/igmevdsms-dis"
+        url = f"{base_api_url}/{query_string}"
         
         headers = {
             "key": _self.api_key,
@@ -340,7 +344,8 @@ class TCMBClient:
         
         params_no_key = {k: v for k, v in params.items() if k != "key"}
         query_string = "&".join([f"{k}={v}" for k, v in params_no_key.items()])
-        url = f"{_self.BASE_URL}/{query_string}"
+        base_api_url = "https://evds3.tcmb.gov.tr/igmevdsms-dis"
+        url = f"{base_api_url}/{query_string}"
         
         headers = {
             "key": _self.api_key,
